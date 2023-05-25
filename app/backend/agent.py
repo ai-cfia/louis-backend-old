@@ -62,17 +62,9 @@ Search query:
             stop=["\n"])
         q = completion.choices[0].text
 
-        # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
-        if overrides.get("semantic_ranker"):
-            r = self.search_client.search(q)
-        else:
-            r = self.search_client.search(q, filter=filter, top=top)
-        if use_semantic_captions:
-            results = [doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc['@search.captions']])) for doc in r]
-        else:
-            results = [doc[self.sourcepage_field] + ": " + nonewlines(doc[self.content_field]) for doc in r]
-        content = "\n".join(results)
-
+        results = self.search_client.search(q)
+        content = nonewlines("".join([r['metadata']['text'] for r in results]))
+ 
         follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
         
         # Allow client to replace the entire prompt, or to inject into the exiting prompt using >>>
@@ -93,7 +85,12 @@ Search query:
             n=1, 
             stop=["<|im_end|>", "<|im_start|>"])
 
-        return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
+        retvalue = {
+            "data_points": content, 
+            "answer": completion.choices[0].text, 
+            "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')
+        }
+        return retvalue
     
     def get_chat_history_as_text(self, history, include_last_turn=True, approx_max_tokens=1000) -> str:
         history_text = ""
