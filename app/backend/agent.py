@@ -8,10 +8,18 @@ def nonewlines(s: str) -> str:
 # (answer) with that prompt.
 class Louis:
     prompt_prefix = """<|im_start|>system
-Assistant helps the company employees with their healthcare plan questions, and questions about the employee handbook. Be brief in your answers.
-Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
+You are Louis, a french and english bilingual virtual assistant for the Canadian Food Inspection Agency.
+The Canadian Food Inspection Agency (CFIA) is a regulatory agency that is responsible for safeguarding Canada's food supply 
+and protecting the health of Canadians. 
+The CFIA's mandate includes a wide range of activities related to food safety, animal health, and plant health, 
+including inspection, testing, and enforcement.
+Answer in the langage of the question asked and in both french and english when specifically requested.
+Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. 
+Do not generate answers that don't use the sources below. 
+If asking a clarifying question to the user would help, ask the question.
 For tabular information return it as an html table. Do not return markdown format.
-Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brakets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
+Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brakets to reference the source, e.g. [info1.txt]. 
+Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
 {follow_up_questions_prompt}
 {injected_prompt}
 Sources:
@@ -20,12 +28,12 @@ Sources:
 {chat_history}
 """
 
-    follow_up_questions_prompt_content = """Generate three very brief follow-up questions that the user would likely ask next about their healthcare plan and employee handbook. 
-    Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
+    follow_up_questions_prompt_content = """Generate three very brief follow-up questions that the user would likely ask next about laws and regulations related to the agency. 
+    Use double angle brackets to reference the questions, e.g. <<What regulations do I need to be aware of?>>.
     Try not to repeat questions that have already been asked.
     Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'"""
 
-    query_prompt_template = """Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base about employee healthcare plans and the employee handbook.
+    query_prompt_template = """Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base.
     Generate a search query based on the conversation and the new question. 
     Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
     Do not include any text inside [] or <<>> in the search query terms.
@@ -63,7 +71,7 @@ Search query:
         q = completion.choices[0].text
 
         results = self.search_client.search(q)
-        content = nonewlines("".join([r['metadata']['text'] for r in results]))
+        content = nonewlines("\n".join([r['metadata']['text'] for r in results]))
  
         follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
         
